@@ -1,0 +1,14 @@
+env: "local"
+http_server:
+  address: "0.0.0.0:8082"
+  timeout: 4s
+  idle_timeout: 60s
+postgres:
+  host: "postgres"
+  port: "5432"
+  user: "auth_user"
+  password: "auth_password"
+  dbname: "auth"
+token_ttl: "15m"
+secret: "your_jwt_secret"
+webhook_url: "http://example.com/webhook"

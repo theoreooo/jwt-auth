@@ -1,0 +1,202 @@
+basePath: /
+definitions:
+  handlers.BadRequestErrorSwagger:
+    properties:
+      error:
+        example: GUID parameter is required
+        type: string
+      status:
+        example: Error
+        type: string
+    type: object
+  handlers.ErrorResponseSwagger:
+    properties:
+      data: {}
+      error:
+        example: something went wrong
+        type: string
+      status:
+        example: Error
+        type: string
+    type: object
+  handlers.GetTokensResponseSwagger:
+    properties:
+      data:
+        $ref: '#/definitions/models.GetTokensResponse'
+      error:
+        type: string
+      status:
+        example: OK
+        type: string
+    type: object
+  handlers.InternalErrorSwagger:
+    properties:
+      error:
+        example: Internal server error
+        type: string
+      status:
+        example: Error
+        type: string
+    type: object
+  handlers.RefreshResponseSwagger:
+    properties:
+      data:
+        $ref: '#/definitions/models.GetTokensResponse'
+      error:
+        type: string
+      status:
+        example: OK
+        type: string
+    type: object
+  handlers.UnauthorizedErrorSwagger:
+    properties:
+      error:
+        example: Invalid tokens or unauthorized
+        type: string
+      status:
+        example: Error
+        type: string
+    type: object
+  handlers.UserResponseSwagger:
+    properties:
+      data:
+        $ref: '#/definitions/models.UserResponse'
+      error:
+        type: string
+      status:
+        example: OK
+        type: string
+    type: object
+  models.GetTokensResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  models.RefreshRequest:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    required:
+    - access_token
+    - refresh_token
+    type: object
+  models.UserResponse:
+    properties:
+      guid:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: JWT authentication service API
+  title: Auth Service API
+  version: "1.0"
+paths:
+  /gettokens:
+    post:
+      description: Генерирует новую пару access и refresh токенов для пользователя
+        по GUID
+      parameters:
+      - description: GUID пользователя
+        example: 123e4567-e89b-12d3-a456-426614174000
+        in: query
+        name: guid
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.GetTokensResponseSwagger'
+        "400":
+          description: GUID parameter is required
+          schema:
+            $ref: '#/definitions/handlers.BadRequestErrorSwagger'
+        "500":
+          description: failed to generate tokens
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseSwagger'
+      summary: Получить пару токенов
+      tags:
+      - auth
+  /logout:
+    post:
+      description: Деавторизует пользователя и инвалидирует все токены сессии
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "401":
+          description: Invalid or expired token
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedErrorSwagger'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.InternalErrorSwagger'
+      security:
+      - BearerAuth: []
+      summary: Деавторизация пользователя
+      tags:
+      - auth
+  /refresh:
+    post:
+      consumes:
+      - application/json
+      description: Обновляет access и refresh токены по действующей паре
+      parameters:
+      - description: Пара токенов
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.RefreshResponseSwagger'
+        "400":
+          description: Both access_token and refresh_token are required
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponseSwagger'
+        "401":
+          description: Invalid tokens or unauthorized
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedErrorSwagger'
+      summary: Обновить пару токенов
+      tags:
+      - auth
+  /user:
+    get:
+      description: Возвращает GUID пользователя по access токену (защищённый роут)
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UserResponseSwagger'
+        "401":
+          description: Invalid or expired token
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedErrorSwagger'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.InternalErrorSwagger'
+      security:
+      - BearerAuth: []
+      summary: Получить GUID текущего пользователя
+      tags:
+      - user
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

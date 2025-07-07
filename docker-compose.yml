@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: auth
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  auth:
+    build: .
+    container_name: auth-service
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - "8082:8082"
+    environment:
+      CONFIG_PATH: /app/config/local.yaml
+      WEBHOOK_URL: "http://example.com/webhook"
+    networks:
+      - default
+
+volumes:
+  pgdata: 
